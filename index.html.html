@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="LAX Training">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0a5c3a">
+<title>LAX Training Plan</title>
+<style>
+:root{
+  --green:#0a5c3a;--green-lt:#e6f5ee;--green-md:#5dcaa5;
+  --blue:#0c447c;--blue-lt:#e6f1fb;
+  --red:#712b13;--red-lt:#faece7;
+  --bg:#f5f5f3;--card:#fff;--border:#e0e0dc;
+  --text:#111;--muted:#777;--sub:#aaa;
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bot:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--text)}
+.app{display:flex;flex-direction:column;height:100%;height:100dvh}
+.topbar{background:var(--green);color:#fff;padding:calc(var(--safe-top) + 12px) 16px 12px;flex-shrink:0}
+.topbar-row{display:flex;align-items:center;justify-content:space-between}
+.app-title{font-size:17px;font-weight:700;letter-spacing:-.2px}
+.app-sub{font-size:11px;opacity:.75;margin-top:2px}
+.phase-chips{display:flex;gap:6px;margin-top:10px}
+.pchip{padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid rgba(255,255,255,.35);color:rgba(255,255,255,.75);background:transparent;transition:all .12s;white-space:nowrap}
+.pchip.on{background:#fff;color:var(--green);border-color:#fff}
+.pchip.p2.on{color:var(--blue)}
+.pchip.p3.on{color:var(--red)}
+.daynav{background:var(--card);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.daynav::-webkit-scrollbar{display:none}
+.daynav-inner{display:flex;padding:0 12px}
+.dchip{padding:11px 14px;font-size:13px;font-weight:500;cursor:pointer;color:var(--muted);border-bottom:2.5px solid transparent;white-space:nowrap;transition:all .1s}
+.dchip.on{color:var(--text);border-bottom-color:var(--green)}
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 12px calc(var(--safe-bot) + 16px)}
+.block-card{background:var(--card);border:1px solid var(--border);border-radius:12px;margin-bottom:10px;overflow:hidden}
+.block-hdr{padding:10px 13px;background:#f8f8f6;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.seq-num{width:22px;height:22px;border-radius:50%;background:var(--green);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.block-name{font-size:13px;font-weight:700;color:var(--text);flex:1}
+.block-rat{font-size:10px;color:var(--sub);margin-top:1px}
+.ex-row{padding:10px 13px;border-bottom:1px solid #f0f0ee}
+.ex-row:last-child{border-bottom:none}
+.ex-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.ex-name{font-size:13px;font-weight:600;color:var(--text);line-height:1.3;flex:1}
+.sr-badge{font-size:11px;font-weight:700;color:var(--text);background:#f0f0ee;padding:3px 8px;border-radius:6px;white-space:nowrap;flex-shrink:0}
+.ex-note{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.5}
+.tag{display:inline-block;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:600;margin:4px 3px 0 0}
+.tag-chain{background:var(--green-lt);color:var(--green)}
+.tag-prehab{background:var(--red-lt);color:var(--red)}
+.ex-actions{display:flex;align-items:center;gap:8px;margin-top:7px;flex-wrap:wrap}
+.vid-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:7px;background:#fff1f0;border:1px solid #fbb;color:#c0392b;font-size:11px;font-weight:600;text-decoration:none;cursor:pointer}
+.vid-btn svg{flex-shrink:0}
+.alt-toggle{display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border-radius:7px;background:var(--blue-lt);border:1px solid #b5d4f4;color:var(--blue);font-size:11px;font-weight:600;cursor:pointer}
+.alt-panel{display:none;margin-top:7px;background:#f8f8f6;border-radius:8px;padding:8px 10px;border:1px solid var(--border)}
+.alt-panel.open{display:block}
+.alt-item{margin-bottom:7px;padding-bottom:7px;border-bottom:1px solid var(--border)}
+.alt-item:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none}
+.alt-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.alt-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--sub);margin-bottom:2px}
+.alt-name{font-size:12px;font-weight:600;color:var(--muted);flex:1}
+.alt-vid{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:6px;background:#fff1f0;border:1px solid #fbb;color:#c0392b;font-size:10px;font-weight:600;text-decoration:none;flex-shrink:0}
+.alt-note{font-size:10.5px;color:var(--sub);margin-top:3px;line-height:1.45}
+.sa-item{padding:10px 13px;border-bottom:1px solid #f0f0ee}
+.sa-item:last-child{border-bottom:none}
+.sa-ex{font-size:13px;font-weight:600;color:var(--text)}
+.sa-vol{font-size:11px;font-weight:700;color:var(--blue);margin-top:2px}
+.sa-note{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.5}
+.sa-vid{display:inline-flex;align-items:center;gap:4px;padding:4px 9px;border-radius:7px;background:#fff1f0;border:1px solid #fbb;color:#c0392b;font-size:11px;font-weight:600;text-decoration:none;margin-top:5px}
+.info-pill{background:var(--green-lt);border-radius:10px;padding:10px 13px;margin-bottom:10px;font-size:11.5px;color:var(--green);line-height:1.6}
+.info-pill strong{font-weight:700}
+.scheme-bar{display:flex;gap:5px;flex-wrap:wrap;padding:10px 12px;background:var(--card);border-bottom:1px solid var(--border);margin-bottom:10px;border-radius:10px}
+.spill{padding:3px 9px;border-radius:14px;font-size:10.5px;color:var(--muted);border:1px solid var(--border);background:#f8f8f6}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="topbar-row">
+      <div>
+        <div class="app-title">LAX Training Plan</div>
+        <div class="app-sub">12-week off-season &middot; Age 16 &middot; Bourne Strategy</div>
+      </div>
+    </div>
+    <div class="phase-chips">
+      <button class="pchip p1 on" onclick="setPhase(1)">Phase 1</button>
+      <button class="pchip p2" onclick="setPhase(2)">Phase 2</button>
+      <button class="pchip p3" onclick="setPhase(3)">Phase 3</button>
+    </div>
+  </div>
+  <div class="daynav"><div class="daynav-inner" id="daynav"></div></div>
+  <div class="scroll" id="scroll"></div>
+</div>
+<script>
+function yt(q){return 'https://www.youtube.com/results?search_query='+encodeURIComponent(q);}
+function vidBtn(url){
+  return '<a class="vid-btn" href="'+url+'" target="_blank"><svg width="12" height="12" viewBox="0 0 16 16"><path d="M6.5 11L11 8 6.5 5v6z" fill="#c0392b"/><rect x="1" y="1" width="14" height="14" rx="3" fill="none" stroke="#c0392b" stroke-width="1.5"/></svg>Watch</a>';
+}
+function altVidBtn(url){
+  return '<a class="alt-vid" href="'+url+'" target="_blank"><svg width="11" height="11" viewBox="0 0 16 16"><path d="M6.5 11L11 8 6.5 5v6z" fill="#c0392b"/><rect x="1" y="1" width="14" height="14" rx="3" fill="none" stroke="#c0392b" stroke-width="1.5"/></svg>Watch</a>';
+}
+
+var SCHEMES={
+1:['3 sets · 10–12 reps','Moderate load','Rest 60–90 sec','Technique-first'],
+2:['4 sets · 8 reps','Higher load','Rest 90–120 sec','Strength emphasis'],
+3:['4 sets · 5–6 reps','Peak load','Full rest','Power expression']
+};
+
+var LIFT={
+1:[
+ {seq:1,group:'Hips / glutes',rat:'Primary throw-chain engine — peak CNS freshness',pairs:[
+  {p:{n:'Trap bar deadlift',sr:'3×10',tags:['chain'],note:'Feet hip-width, neutral spine. Drive floor away explosively. Highest glute/hamstring recruitment of any bilateral movement.',vid:yt('trap bar deadlift form tutorial')},
+   alts:[{n:'Romanian deadlift (BB or DB)',note:'Hip hinge pattern identical. Slightly higher hamstring bias.',vid:yt('romanian deadlift form tutorial')},
+         {n:'Hip thrust (barbell or machine)',note:'Isolates glute drive more directly. Excellent throw-chain transfer.',vid:yt('barbell hip thrust form tutorial')}]},
+  {p:{n:'Single-leg glute bridge',sr:'3×12 ea',tags:['chain'],note:'One leg extended, drive through heel. Pause and squeeze. Unilateral stability mirrors the drive step.',vid:yt('single leg glute bridge tutorial')},
+   alts:[{n:'Single-leg hip thrust (bench)',note:'Elevate shoulder on bench. Greater glute range of motion.',vid:yt('single leg hip thrust tutorial')},
+         {n:'Cable pull-through',note:'Hip hinge with glute squeeze at top. Good throw-chain transfer.',vid:yt('cable pull through exercise tutorial')}]},
+  {p:{n:'Lateral band walk',sr:'3×15 ea',tags:[],note:'Band above knees, athletic squat. Controlled lateral steps. Glute med critical for cutting stability.',vid:yt('lateral band walk exercise form')},
+   alts:[{n:'Side-lying hip abduction (cable)',note:'Cable machine version. Same glute med target.',vid:yt('cable hip abduction exercise')},
+         {n:'Sumo squat to stand',note:'Wide stance, toes out. Targets glute med and hip external rotators.',vid:yt('sumo squat to stand exercise')}]}
+ ]},
+ {seq:2,group:'Core / low back',rat:'Anti-rotation stability transmits hip power up the chain',pairs:[
+  {p:{n:'Pallof press (cable)',sr:'3×12 ea',tags:['chain'],note:'Anti-rotation drill. Press straight out while resisting rotation. Core of the throw chain.',vid:yt('pallof press anti rotation core tutorial')},
+   alts:[{n:'Pallof press (resistance band)',note:'Anchor band to rack upright. Identical movement pattern.',vid:yt('band pallof press tutorial')},
+         {n:'Half-kneeling anti-rotation hold',note:'Same setup, hold extended 3 sec per rep. Higher stability demand.',vid:yt('half kneeling anti rotation hold')}]},
+  {p:{n:'Cable woodchop (high-to-low)',sr:'3×12 ea',tags:['chain'],note:'Pull from high to opposite hip. This IS the throw pattern under resistance. Hips lead, trunk follows, arms last.',vid:yt('cable woodchop high to low rotational core')},
+   alts:[{n:'DB rotational chop (standing)',note:'Single DB, same path. Use when cable stations occupied.',vid:yt('dumbbell rotational chop exercise')},
+         {n:'Band high-to-low chop',note:'Anchor band high. Identical path. Use band from training kit.',vid:yt('resistance band woodchop high to low')}]},
+  {p:{n:'Dead bug',sr:'3×10 ea',tags:[],note:'Low back pressed to floor throughout. Opposite arm and leg extend slowly. Never sacrifice lumbar contact.',vid:yt('dead bug exercise core stability tutorial')},
+   alts:[{n:'Ab wheel rollout (from knees)',note:'Higher anterior chain demand. Progress to full rollout in Phase 3.',vid:yt('ab wheel rollout from knees tutorial')},
+         {n:'Plank with shoulder tap',note:'3×30 sec + taps. Anti-rotation while maintaining position.',vid:yt('plank shoulder tap exercise')}]},
+  {p:{n:'Hanging knee raise',sr:'3×12',tags:[],note:'Control the swing. Drive knees to chest, lower with control. Hip flexor and abdominal integration.',vid:yt('hanging knee raise abs tutorial')},
+   alts:[{n:'Decline bench crunch',note:'If pull-up bar occupied. Weighted in Phase 2+.',vid:yt('decline bench crunch tutorial')},
+         {n:"Captain's chair knee raise",note:'Assisted if grip limiting. Same hip flexor and abdominal target.',vid:yt("captain's chair knee raise tutorial")}]}
+ ]},
+ {seq:3,group:'Quads / hamstrings',rat:'Large compound work after hip and core activation',pairs:[
+  {p:{n:'Goblet squat',sr:'3×10',tags:[],note:'DB at chest, heels shoulder-width. Drive knees over toes. Foundational quad development.',vid:yt('goblet squat form tutorial')},
+   alts:[{n:'Leg press (machine)',note:'Set feet high for hamstring/glute emphasis. Safer axial loading.',vid:yt('leg press machine form tutorial')},
+         {n:'Bulgarian split squat (DB)',note:'Rear foot elevated. Higher unilateral demand. Mirrors athletic stride.',vid:yt('bulgarian split squat dumbbell tutorial')}]},
+  {p:{n:'Romanian deadlift (DB)',sr:'3×10',tags:['chain'],note:'Hinge at hips, soft knees. Hamstring stretch at bottom. Accessory hamstring work for block 1.',vid:yt('dumbbell romanian deadlift form')},
+   alts:[{n:'Lying leg curl (machine)',note:'If RDL conflicts with block 1 fatigue. Isolates hamstrings.',vid:yt('lying leg curl machine form')},
+         {n:'Nordic hamstring curl',note:'Bench + partner anchor. Extremely high hamstring demand. Eccentric-focused.',vid:yt('nordic hamstring curl tutorial')}]},
+  {p:{n:'Lateral bound',sr:'3×6 ea',tags:['chain'],note:'Explosive single-leg lateral jump. Stick landing 2 sec. Trains lateral force production for cutting.',vid:yt('lateral bound jump exercise athletes')},
+   alts:[{n:'Lateral step-up (DB)',note:'If space limited. Same glute med demand, less plyometric.',vid:yt('lateral step up dumbbell exercise')},
+         {n:'Skater squat (bodyweight)',note:'Single-leg, rear leg extended. High unilateral demand.',vid:yt('skater squat bodyweight tutorial')}]}
+ ]},
+ {seq:4,group:'Chest / back',rat:'Horizontal push and pull — compounds before isolations',pairs:[
+  {p:{n:'DB bench press',sr:'3×12',tags:[],note:'Control descent 2 sec. Press explosively. Shoulder blades pinched back.',vid:yt('dumbbell bench press form tutorial')},
+   alts:[{n:'Machine chest press',note:'Identical movement pattern. Good if bench occupied.',vid:yt('machine chest press tutorial')},
+         {n:'Cable chest press (standing)',note:'Anti-rotation core demand. Higher throw-chain specificity.',vid:yt('standing cable chest press tutorial')}]},
+  {p:{n:'Seated cable row',sr:'3×12',tags:[],note:'Pull elbows past ribs. Pause at peak. Slow return. Scapular retraction strength.',vid:yt('seated cable row proper form')},
+   alts:[{n:'DB single-arm row',note:'Brace on bench. Full range. Slightly higher lat involvement.',vid:yt('dumbbell single arm row tutorial')},
+         {n:'Machine row',note:'Chest-supported eliminates lower-back fatigue accumulation.',vid:yt('chest supported machine row tutorial')}]}
+ ]},
+ {seq:5,group:'Shoulders / lats',rat:'Arm acceleration and deceleration — prehab non-negotiable',pairs:[
+  {p:{n:'Half-kneeling single-arm cable press',sr:'3×10 ea',tags:['chain'],note:'Kneel on opposite knee. Press at shoulder height. Directly mimics throw arm path. Anti-rotation built in.',vid:yt('half kneeling single arm cable press tutorial')},
+   alts:[{n:'DB Arnold press (seated)',note:'Rotational component trains shoulder through full arc.',vid:yt('arnold press dumbbell tutorial')},
+         {n:'Landmine press (half-kneeling)',note:'Barbell in corner. Arcing path. High throw-chain transfer.',vid:yt('landmine press half kneeling tutorial')}]},
+  {p:{n:'Lat pulldown (machine)',sr:'3×12',tags:[],note:'Wide grip, pull to upper chest. Lats are critical throw decelerators and shoulder protectors.',vid:yt('lat pulldown proper form tutorial')},
+   alts:[{n:'Assisted pull-up (machine)',note:'Identical muscle pattern. Progress toward unassisted.',vid:yt('assisted pull up machine tutorial')},
+         {n:'DB single-arm pullover',note:'Lying on bench. Arc DB overhead. Direct lat isolation.',vid:yt('dumbbell pullover lat exercise')}]},
+  {p:{n:'Band external rotation',sr:'3×15 ea',tags:['prehab'],note:'Elbow at 90° pinned to side. Rotate outward. Slow and controlled. Non-negotiable every session.',vid:yt('band external rotation rotator cuff exercise')},
+   alts:[{n:'Cable external rotation (low pulley)',note:'More consistent resistance than band through range.',vid:yt('cable external rotation shoulder exercise')},
+         {n:'Prone Y-T-W raises',note:'Face-down on incline bench. Full rotator cuff and posterior delt. 10 reps each position.',vid:yt('prone YTW raises rotator cuff')}]},
+  {p:{n:'Face pull (cable rope)',sr:'3×15',tags:['prehab'],note:'Pull rope to face, elbows high. Hands beside ears, thumbs back at finish. Corrects throwing imbalances.',vid:yt('face pull cable rope shoulder health')},
+   alts:[{n:'Band face pull',note:'Anchor band at face height. Identical movement.',vid:yt('band face pull exercise tutorial')},
+         {n:'Rear delt fly (DB, bent over)',note:'Isolates posterior delt and external rotators.',vid:yt('rear delt fly dumbbell bent over')}]}
+ ]},
+ {seq:6,group:'Biceps / triceps',rat:'Isolation last — partially fatigued from compounds above',pairs:[
+  {p:{n:'Triceps pushdown (cable)',sr:'3×12',tags:[],note:'Elbows pinned. Full extension. Triceps drive elbow extension in throw acceleration.',vid:yt('triceps pushdown cable tutorial')},
+   alts:[{n:'Overhead triceps extension (DB)',note:'Stretches long head more fully. Use when cable occupied.',vid:yt('overhead triceps extension dumbbell')},
+         {n:'Close-grip bench press (DB)',note:'Compound tricep movement. If isolation machines occupied.',vid:yt('close grip dumbbell bench press')}]},
+  {p:{n:'DB bicep curl',sr:'3×12',tags:[],note:'Supinated grip, full range. Biceps control elbow deceleration in the throw.',vid:yt('dumbbell bicep curl proper form')},
+   alts:[{n:'Cable curl (low pulley)',note:'Continuous tension. If DBs in use.',vid:yt('cable curl low pulley bicep')},
+         {n:'Hammer curl (DB)',note:'Neutral grip. Trains brachialis. Good forearm complement.',vid:yt('hammer curl dumbbell tutorial')}]}
+ ]},
+ {seq:7,group:'Wrists / forearms',rat:'Terminal throw chain link — the release. Every session.',pairs:[
+  {p:{n:'Wrist roller',sr:'3× up/down',tags:['chain'],note:'Arms at shoulder height, roll weight up then control down. Builds the wrist snap power at release. Both directions equally important.',vid:yt('wrist roller forearm exercise tutorial')},
+   alts:[{n:'Wrist curl + reverse wrist curl (DB)',note:'Seated, forearm on knee. Both flexors and extensors.',vid:yt('wrist curl reverse wrist curl dumbbell')},
+         {n:'Plate pinch carry',note:'Pinch plate, carry 30–40 yards. Grip and wrist stability.',vid:yt('plate pinch carry grip strength')}]},
+  {p:{n:'DB pronation / supination',sr:'3×15 ea',tags:['chain'],note:'Hold DB at end, elbow at 90°. Rotate palm up and down. Trains forearm rotation in the throw release snap.',vid:yt('dumbbell pronation supination forearm exercise')},
+   alts:[{n:'Cable forearm rotation (low pulley)',note:'Same rotation under continuous cable tension.',vid:yt('cable forearm rotation low pulley')},
+         {n:'Rice bucket drill',note:'Bury hand in rice, rotate, open/close fist. Full forearm and finger flexor conditioning.',vid:yt('rice bucket drill forearm conditioning')}]}
+ ]}
+],
+2:[
+ {seq:1,group:'Hips / glutes',rat:'Heavier loading — single-leg work increases',pairs:[
+  {p:{n:'Trap bar deadlift',sr:'4×8',tags:['chain'],note:'Increase load from Phase 1. 4 sets. Full rest. Explosive hip drive focus.',vid:yt('trap bar deadlift form tutorial')},
+   alts:[{n:'Barbell RDL (heavy)',note:'Hip hinge identical. Increase load from Phase 1 DB version.',vid:yt('barbell romanian deadlift form')},
+         {n:'Hip thrust (barbell, heavy)',note:'Heaviest glute isolation movement. High throw-chain transfer.',vid:yt('barbell hip thrust form tutorial')}]},
+  {p:{n:'Single-leg RDL (DB)',sr:'4×8 ea',tags:['chain'],note:'Progresses Phase 1 glute bridge. Stand on one leg, hinge with control. Higher stabilizer demand.',vid:yt('single leg romanian deadlift dumbbell tutorial')},
+   alts:[{n:'Single-leg hip thrust (heavy)',note:'If RDL balance is limiting. Same unilateral glute demand.',vid:yt('single leg hip thrust tutorial')},
+         {n:'Single-leg leg press',note:'Machine version. Less stability demand but higher load capacity.',vid:yt('single leg press machine tutorial')}]},
+  {p:{n:'Lateral bound',sr:'3×6 ea',tags:['chain'],note:'Max lateral distance. Stick 2 sec. Distance focus. Cutting power development.',vid:yt('lateral bound jump exercise athletes')},
+   alts:[{n:'Lateral step-up with DB (heavy)',note:'Same glute med demand, less explosive.',vid:yt('lateral step up dumbbell exercise')},
+         {n:'Band lateral walk (heavy band)',note:'Increase resistance. Low athletic squat throughout.',vid:yt('heavy band lateral walk exercise')}]}
+ ]},
+ {seq:2,group:'Core / low back',rat:'Higher load anti-rotation — all compound loads increase',pairs:[
+  {p:{n:'Pallof press (heavy cable)',sr:'4×12 ea',tags:['chain'],note:'Increase resistance. One additional set. Anti-rotation demand scales with load.',vid:yt('pallof press anti rotation core tutorial')},
+   alts:[{n:'Pallof press ISO hold',note:'Same load, hold extended 3 sec per rep.',vid:yt('pallof press isometric hold')},
+         {n:'Band Pallof press (heavy band)',note:'Use thicker band. Identical pattern.',vid:yt('band pallof press tutorial')}]},
+  {p:{n:'Cable woodchop (heavier)',sr:'4×12 ea',tags:['chain'],note:'Increase load and set. Hips lead every rep. The throw under progressively higher resistance.',vid:yt('cable woodchop high to low rotational core')},
+   alts:[{n:'Med ball rotational wall throw (10 lb)',note:'Explosive rotational throw. Concentric-only version of same pattern.',vid:yt('medicine ball rotational wall throw')},
+         {n:'Band high-to-low chop (heavy)',note:'Thick band anchored high. Same path.',vid:yt('resistance band woodchop high to low')}]},
+  {p:{n:'Dead bug (arm extended)',sr:'3×10 ea',tags:[],note:'Straighten arm — harder lever. Low back glued to floor throughout.',vid:yt('dead bug arm extended progression')},
+   alts:[{n:'Ab wheel rollout (from knees)',note:'Full rollout from kneeling. Higher anterior chain demand.',vid:yt('ab wheel rollout from knees tutorial')},
+         {n:'Cable crunch',note:'Rope from high pulley. Weighted abdominal flexion.',vid:yt('cable crunch abs tutorial')}]},
+  {p:{n:'Hanging leg raise',sr:'3×10',tags:[],note:'Full straight legs. Controlled. No swing. Higher demand vs Phase 1.',vid:yt('hanging leg raise proper form')},
+   alts:[{n:"Captain's chair leg raise",note:'Supported. Full straight leg version.',vid:yt("captain's chair leg raise tutorial")},
+         {n:'Decline bench leg raise',note:'If pull-up bar occupied.',vid:yt('decline bench leg raise exercise')}]}
+ ]},
+ {seq:3,group:'Quads / hamstrings',rat:'Heavier unilateral work — posterior chain pre-activated',pairs:[
+  {p:{n:'Bulgarian split squat (DB)',sr:'4×8 ea',tags:[],note:'Progresses goblet squat. Rear foot elevated. High unilateral demand. Mirrors athletic stride.',vid:yt('bulgarian split squat dumbbell tutorial')},
+   alts:[{n:'Leg press (machine, heavy)',note:'If split squat balance limiting. Feet high, posterior emphasis.',vid:yt('leg press machine form tutorial')},
+         {n:'Goblet squat (heavier DB)',note:'Increase load from Phase 1.',vid:yt('goblet squat form tutorial')}]},
+  {p:{n:'Lying leg curl (machine)',sr:'4×8',tags:[],note:'Full range. Slow eccentric (3 sec down). Complements block 1 deadlift without redundancy.',vid:yt('lying leg curl machine form')},
+   alts:[{n:'Nordic hamstring curl',note:'Partner anchors feet. Highest eccentric hamstring demand available.',vid:yt('nordic hamstring curl tutorial')},
+         {n:'DB Romanian deadlift',note:'If machine occupied. Keep lighter than block 1 trap bar.',vid:yt('dumbbell romanian deadlift form')}]},
+  {p:{n:'Box jump',sr:'3×6',tags:['chain'],note:'Arm swing, explode up, land soft. Step down. Ground force expression.',vid:yt('box jump proper form tutorial')},
+   alts:[{n:'Broad jump',note:'Horizontal power. Max distance, stick landing.',vid:yt('broad jump power training athletes')},
+         {n:'Depth jump (step off, rebound)',note:'Step off low box, jump immediately on landing. Highest plyometric demand.',vid:yt('depth jump plyometric tutorial')}]}
+ ]},
+ {seq:4,group:'Chest / back',rat:'Heavier compound pressing and rowing',pairs:[
+  {p:{n:'DB bench press (heavy)',sr:'4×8',tags:[],note:'Increase load from Phase 1. 4 sets. Controlled descent, explosive press.',vid:yt('dumbbell bench press form tutorial')},
+   alts:[{n:'Cable chest press (standing)',note:'Anti-rotation demand. Higher throw-chain specificity.',vid:yt('standing cable chest press tutorial')},
+         {n:'Machine chest press (heavy)',note:'Consistent path. If DBs unavailable at target weight.',vid:yt('machine chest press tutorial')}]},
+  {p:{n:'Seated cable row (heavy)',sr:'4×8',tags:[],note:'Increase load. Full scapular retraction. 2-sec hold.',vid:yt('seated cable row proper form')},
+   alts:[{n:'DB single-arm row (heavy)',note:'Brace on bench. Full range.',vid:yt('dumbbell single arm row tutorial')},
+         {n:'Chest-supported T-bar row',note:'Eliminates lower back fatigue from deadlift block.',vid:yt('chest supported t bar row tutorial')}]}
+ ]},
+ {seq:5,group:'Shoulders / lats',rat:'Upper chain at higher loads — prehab as superset',pairs:[
+  {p:{n:'Half-kneeling single-arm cable press (heavy)',sr:'4×8 ea',tags:['chain'],note:'Increase load and sets. Throw arm path at higher resistance.',vid:yt('half kneeling single arm cable press tutorial')},
+   alts:[{n:'Landmine press (half-kneeling)',note:'Barbell in corner. Arcing path.',vid:yt('landmine press half kneeling tutorial')},
+         {n:'DB lateral raise + press combo',note:'Raise to shoulder height, press overhead.',vid:yt('lateral raise to press dumbbell exercise')}]},
+  {p:{n:'Lat pulldown / assisted pull-up (heavy)',sr:'4×8',tags:[],note:'Increase load. Full lat engagement. Heavy lat work directly protects the shoulder.',vid:yt('lat pulldown proper form tutorial')},
+   alts:[{n:'Close-grip lat pulldown',note:'Neutral grip. Slightly higher bicep involvement.',vid:yt('close grip lat pulldown tutorial')},
+         {n:'DB single-arm pullover (heavy)',note:'If pulldown occupied.',vid:yt('dumbbell pullover lat exercise')}]},
+  {p:{n:'Band ext. rotation + face pull superset',sr:'3×15 ea',tags:['prehab'],note:'Back-to-back. No rest between. 60 sec rest after pair. Peak compound loading requires dialed-in prehab.',vid:yt('band external rotation face pull superset')},
+   alts:[{n:'Prone Y-T-W + face pull superset',note:'Alternate combination. Covers more of posterior shoulder complex.',vid:yt('prone YTW face pull superset')},
+         {n:'Cable ext. rotation + cable face pull',note:'Both on cable. More consistent resistance.',vid:yt('cable external rotation face pull')}]}
+ ]},
+ {seq:6,group:'Biceps / triceps',rat:'Higher loads — fatigue from compounds is a feature',pairs:[
+  {p:{n:'Overhead triceps extension (DB)',sr:'4×8',tags:[],note:'Seated or standing. Stretches long head. Heavier than Phase 1.',vid:yt('overhead triceps extension dumbbell')},
+   alts:[{n:'Triceps pushdown (cable, heavy)',note:'Increase load from Phase 1. Elbows pinned.',vid:yt('triceps pushdown cable tutorial')},
+         {n:'Skull crusher (DB)',note:'Lying on bench. High long-head stretch.',vid:yt('skull crusher dumbbell tutorial')}]},
+  {p:{n:'Incline DB curl',sr:'4×8',tags:[],note:'Seated on incline, DBs hang at full extension. Stretches biceps at bottom.',vid:yt('incline dumbbell curl bicep tutorial')},
+   alts:[{n:'Preacher curl (machine or DB)',note:'Eliminates shoulder involvement. Full bicep isolation.',vid:yt('preacher curl tutorial')},
+         {n:'Cable curl (low pulley, heavy)',note:'Continuous tension.',vid:yt('cable curl low pulley bicep')}]}
+ ]},
+ {seq:7,group:'Wrists / forearms',rat:'Higher wrist roller loads — every session',pairs:[
+  {p:{n:'Wrist roller (heavier)',sr:'3× up/down',tags:['chain'],note:'Add weight vs Phase 1. Control both directions. The last power transfer on every throw.',vid:yt('wrist roller forearm exercise tutorial')},
+   alts:[{n:'Wrist curl + reverse wrist curl (heavy)',note:'Increase DB weight. Both flexors and extensors.',vid:yt('wrist curl reverse wrist curl dumbbell')},
+         {n:'Farmer carry (heavy DBs)',note:'50 yards. Grip endurance under load.',vid:yt('farmer carry exercise tutorial')}]},
+  {p:{n:'DB pronation / supination (heavy)',sr:'3×15 ea',tags:['chain'],note:'Heavier DB. Full range. The forearm rotation in the throw release.',vid:yt('dumbbell pronation supination forearm exercise')},
+   alts:[{n:'Cable forearm rotation (heavier)',note:'Increase cable resistance from Phase 1.',vid:yt('cable forearm rotation low pulley')},
+         {n:'Reverse curl (DB)',note:'Pronated grip. Brachioradialis and wrist extensors.',vid:yt('reverse curl dumbbell tutorial')}]}
+ ]}
+],
+3:[
+ {seq:1,group:'Hips / glutes',rat:'CNS primer opens session — peak posterior chain loading',pairs:[
+  {p:{n:'Vertical jump (CNS primer)',sr:'3×5',tags:['chain'],note:'Opens every lift session. Max effort. Full rest between reps. Potentiates subsequent heavy lifting.',vid:yt('vertical jump technique training athletes')},
+   alts:[{n:'Broad jump (CNS primer)',note:'Horizontal power primer. Same CNS activation effect.',vid:yt('broad jump power training athletes')},
+         {n:'Box jump — max height',note:'Same CNS primer function. Step down only.',vid:yt('box jump proper form tutorial')}]},
+  {p:{n:'Trap bar deadlift (peak load)',sr:'4×5',tags:['chain'],note:'Heaviest loads of the program. Full rest. Technique is the ceiling.',vid:yt('trap bar deadlift form tutorial')},
+   alts:[{n:'Barbell RDL (peak load)',note:'If trap bar occupied. Heaviest RDL of the program.',vid:yt('barbell romanian deadlift form')},
+         {n:'Hang power clean (if technique established)',note:'Explosive hip extension from hang. Never sacrifice technique for load.',vid:yt('hang power clean tutorial technique')}]},
+  {p:{n:'Single-leg RDL (peak load)',sr:'4×6 ea',tags:['chain'],note:'Heaviest unilateral load. Maintain hip alignment. No compromise on hinge depth.',vid:yt('single leg romanian deadlift dumbbell tutorial')},
+   alts:[{n:'Single-leg hip thrust (peak load)',note:'If balance limits RDL. Same unilateral glute demand.',vid:yt('single leg hip thrust tutorial')},
+         {n:'Bulgarian split squat (peak load)',note:'If conflicts with block 3 quad work.',vid:yt('bulgarian split squat dumbbell tutorial')}]},
+  {p:{n:'Lateral bound (distance focus)',sr:'4×6 ea',tags:['chain'],note:'Max lateral distance per bound. Stick 3 sec. Peak lateral force production. Measure 12 weeks of development.',vid:yt('lateral bound jump exercise athletes')},
+   alts:[{n:'Broad jump + lateral bound combo',note:'Forward broad jump into immediate lateral bound. Multi-planar power.',vid:yt('broad jump lateral bound combination')},
+         {n:'Single-leg hop (lateral, max distance)',note:'Max lateral hop on one leg. Highest unilateral demand.',vid:yt('single leg lateral hop plyometric')}]}
+ ]},
+ {seq:2,group:'Core / low back',rat:'Peak anti-rotation and rotational power',pairs:[
+  {p:{n:'Pallof press (peak resistance)',sr:'4×10 ea',tags:['chain'],note:'Highest resistance. Anti-rotation demand translates directly to throw stability under fatigue.',vid:yt('pallof press anti rotation core tutorial')},
+   alts:[{n:'Pallof press ISO hold (peak)',note:'3-sec holds. Higher demand on stabilizers.',vid:yt('pallof press isometric hold')},
+         {n:'Copenhagen plank',note:'Side plank with top leg on bench. Combines lateral core and hip adductor.',vid:yt('copenhagen plank exercise tutorial')}]},
+  {p:{n:'Cable woodchop (peak load)',sr:'4×10 ea',tags:['chain'],note:'Heaviest woodchop load. Hips lead. Full explosive rotation. Treat this exercise like a throw.',vid:yt('cable woodchop high to low rotational core')},
+   alts:[{n:'Med ball rotational throw (heavy, 12 lb)',note:'Max velocity. Measures rotational power development from Phase 1.',vid:yt('heavy medicine ball rotational throw wall')},
+         {n:'Half-kneeling med ball pass (heavy)',note:'10–12 lb. Hips-first sequence.',vid:yt('half kneeling medicine ball pass rotational')}]},
+  {p:{n:'Ab wheel rollout (full)',sr:'3×10',tags:[],note:"Full extension — don't let hips sag. Peak anterior chain and shoulder stability.",vid:yt('ab wheel rollout full proper form')},
+   alts:[{n:'Dragon flag (controlled eccentric)',note:'Advanced. Bench anchor. Full body lever. Phase 3 only.',vid:yt('dragon flag exercise tutorial')},
+         {n:'Cable crunch (heavy)',note:'Rope from high pulley. Weighted abdominal flexion.',vid:yt('cable crunch abs tutorial')}]},
+  {p:{n:'Hanging leg raise (weighted)',sr:'3×10',tags:[],note:'Add light ankle weight. Full range, controlled. No swing. Highest abdominal demand of the program.',vid:yt('hanging leg raise weighted tutorial')},
+   alts:[{n:'Toes-to-bar',note:'Full leg raise to bar. Highest possible range.',vid:yt('toes to bar exercise tutorial')},
+         {n:'Weighted decline crunch',note:'Plate on chest, full range.',vid:yt('weighted decline crunch tutorial')}]}
+ ]},
+ {seq:3,group:'Quads / hamstrings',rat:'Peak lower body strength — CNS primed from block 1',pairs:[
+  {p:{n:'Bulgarian split squat (peak load)',sr:'4×6 ea',tags:[],note:'Heaviest unilateral leg work. Mirrors athletic stride under peak load.',vid:yt('bulgarian split squat dumbbell tutorial')},
+   alts:[{n:'Leg press (peak load)',note:'If split squat balance limits at peak weights.',vid:yt('leg press machine form tutorial')},
+         {n:'Front squat (barbell)',note:'If technique sound. High quad, upright torso. Moderate load only.',vid:yt('front squat barbell form tutorial')}]},
+  {p:{n:'Nordic hamstring curl',sr:'3×6',tags:[],note:'Partner anchors feet. Slow eccentric descent. Highest hamstring eccentric load available.',vid:yt('nordic hamstring curl tutorial')},
+   alts:[{n:'Lying leg curl (peak load)',note:'Heaviest machine setting. 3-sec eccentric.',vid:yt('lying leg curl machine form')},
+         {n:'DB single-leg RDL (heavy)',note:'If machine occupied. Heaviest unilateral hamstring work.',vid:yt('single leg romanian deadlift dumbbell tutorial')}]},
+  {p:{n:'Depth jump',sr:'4×5',tags:['chain'],note:'Step off box, jump immediately on landing. Reactive strength — the nervous system at peak expression.',vid:yt('depth jump plyometric tutorial')},
+   alts:[{n:'Box jump (max height)',note:'If depth jump technique not established. Step down every rep.',vid:yt('box jump proper form tutorial')},
+         {n:'Broad jump + lateral bound combo',note:'Multi-planar peak power.',vid:yt('broad jump lateral bound combination')}]}
+ ]},
+ {seq:4,group:'Chest / back',rat:'Peak horizontal push and pull',pairs:[
+  {p:{n:'DB bench press (peak load)',sr:'4×6',tags:[],note:'Heaviest pressing load of the program. Explosive concentric, controlled eccentric.',vid:yt('dumbbell bench press form tutorial')},
+   alts:[{n:'Cable chest press (standing, peak)',note:'Highest throw-chain specificity of any pressing movement.',vid:yt('standing cable chest press tutorial')},
+         {n:'Machine chest press (peak load)',note:'If DBs at target weight unavailable.',vid:yt('machine chest press tutorial')}]},
+  {p:{n:'Seated cable row (peak load)',sr:'4×6',tags:[],note:'Heaviest row. Scapular retraction. No momentum. Full rest.',vid:yt('seated cable row proper form')},
+   alts:[{n:'Chest-supported T-bar row (peak)',note:'Eliminates lower back fatigue at peak loads.',vid:yt('chest supported t bar row tutorial')},
+         {n:'DB single-arm row (peak load)',note:'Heaviest single-arm row of the program.',vid:yt('dumbbell single arm row tutorial')}]}
+ ]},
+ {seq:5,group:'Shoulders / lats',rat:'Peak upper chain — prehab most critical here',pairs:[
+  {p:{n:'Half-kneeling single-arm cable press (peak)',sr:'4×6 ea',tags:['chain'],note:'Heaviest cable load. Throw arm path at peak resistance. Train this like a throw.',vid:yt('half kneeling single arm cable press tutorial')},
+   alts:[{n:'Landmine press (peak load)',note:'Heaviest landmine load. Arcing path.',vid:yt('landmine press half kneeling tutorial')},
+         {n:'DB single-arm shoulder press (heavy)',note:'Seated. Less throw-specific but high shoulder value.',vid:yt('single arm dumbbell shoulder press')}]},
+  {p:{n:'Weighted pull-up / heavy lat pulldown',sr:'4×6',tags:[],note:'Add weight belt or heaviest stack. Lats at peak loading protect the shoulder through the throw.',vid:yt('weighted pull up lat pulldown heavy')},
+   alts:[{n:'Close-grip weighted pull-up',note:'Neutral grip. Slightly higher bicep involvement.',vid:yt('close grip weighted pull up')},
+         {n:'Heavy DB pullover',note:'If pulldown occupied.',vid:yt('dumbbell pullover lat exercise')}]},
+  {p:{n:'Rotator cuff full circuit',sr:'3×15 ea',tags:['prehab'],note:'Band external rotation + face pull + prone Y-T-W. Non-negotiable. Peak loads = maximum shoulder stress.',vid:yt('rotator cuff full circuit prehab shoulder')},
+   alts:[{n:'Cable full rotator cuff circuit',note:'External rotation + face pull + band pull-apart.',vid:yt('cable rotator cuff circuit exercise')},
+         {n:'Prone Y-T-W (light DB, 2–3 lb)',note:'Adds posterior shoulder demand.',vid:yt('prone YTW raises rotator cuff')}]}
+ ]},
+ {seq:6,group:'Biceps / triceps',rat:'Peak elbow loads — significantly stronger than Phase 1',pairs:[
+  {p:{n:'Skull crusher (DB, heavy)',sr:'4×6',tags:[],note:'Lying on bench. Heavy DBs. Highest long-head triceps stretch of the program.',vid:yt('skull crusher dumbbell tutorial')},
+   alts:[{n:'Triceps pushdown (peak load)',note:'Heaviest cable stack. If skull crusher space unavailable.',vid:yt('triceps pushdown cable tutorial')},
+         {n:'Overhead triceps extension (peak)',note:'Seated, heaviest DB.',vid:yt('overhead triceps extension dumbbell')}]},
+  {p:{n:'Preacher curl (peak load)',sr:'4×6',tags:[],note:'Machine or DB on preacher bench. Full bicep isolation at peak load.',vid:yt('preacher curl tutorial')},
+   alts:[{n:'Incline DB curl (heavy)',note:'Full stretch at bottom. If preacher bench occupied.',vid:yt('incline dumbbell curl bicep tutorial')},
+         {n:'Barbell curl (heavy)',note:'Standing. Strict form — no swinging.',vid:yt('barbell curl proper form no swing')}]}
+ ]},
+ {seq:7,group:'Wrists / forearms',rat:'Peak throw chain terminal link — measure the release power',pairs:[
+  {p:{n:'Wrist roller (peak load)',sr:'3× up/down',tags:['chain'],note:'Heaviest wrist roller load. The wall ball should sound different vs week 1. That is 12 weeks of kinetic chain work.',vid:yt('wrist roller forearm exercise tutorial')},
+   alts:[{n:'Heavy wrist curl + reverse wrist curl',note:'Heaviest DB. Both directions.',vid:yt('wrist curl reverse wrist curl dumbbell')},
+         {n:'Farmer carry (peak load)',note:'Heaviest DBs. 60 yards.',vid:yt('farmer carry exercise tutorial')}]},
+  {p:{n:'DB pronation / supination (peak load)',sr:'3×15 ea',tags:['chain'],note:'Heaviest DB. The release is dramatically stronger now.',vid:yt('dumbbell pronation supination forearm exercise')},
+   alts:[{n:'Reverse curl (heavy DB)',note:'Brachioradialis and wrist extensors at peak load.',vid:yt('reverse curl dumbbell tutorial')},
+         {n:'Cable forearm rotation (peak)',note:'Heaviest cable resistance.',vid:yt('cable forearm rotation low pulley')}]}
+ ]}
+]
+};
+
+var SA={
+1:{
+'sa-a':{title:'Speed & agility — day A',focus:'Acceleration · top-end speed · 1st-step quickness',equip:'Resistance bands, cones (or water bottle markers), open grass field.',blocks:[
+ {name:'Dynamic warmup (12 min)',items:[
+  {ex:'A-skip progressions',vol:'2×20 yd',note:'Knee drive, arm swing. Start slow, accelerate to brisk tempo.',vid:yt('A skip drill sprint warmup')},
+  {ex:'Hip flexor march',vol:'2×20 yd',note:'Exaggerated high-knee march. Activates hip flexors for sprint mechanics.',vid:yt('hip flexor march warmup drill')},
+  {ex:'Leg swings (forward + lateral)',vol:'10 each direction',note:'Hold fence or partner. Full range. Activates hip complex.',vid:yt('leg swings dynamic warmup')},
+  {ex:'Lateral shuffle + crossover',vol:'2×15 yd each',note:'Stay low, quick feet. Activates glute med and adductors.',vid:yt('lateral shuffle crossover step warmup')},
+  {ex:'Band pull-apart',vol:'2×15',note:'Activates posterior shoulder before throwing-pattern work.',vid:yt('band pull apart shoulder warmup')}
+ ]},
+ {name:'Acceleration block (15 min)',items:[
+  {ex:'Falling starts',vol:'10×10 yd',note:'Lean forward to tipping point, catch yourself into a sprint. Trains first-step drive angle. Walk back = full recovery.',vid:yt('falling start sprint drill acceleration')},
+  {ex:'3-point stance sprints',vol:'8×20 yd',note:'Hand on ground, drive out. Builds low drive angle and aggressive first step.',vid:yt('3 point stance sprint start drill')},
+  {ex:'40-yard accelerations',vol:'6×40 yd',note:'85–90% effort. Maintain drive phase mechanics past 20 yards. Walk back.',vid:yt('40 yard dash acceleration mechanics')}
+ ]},
+ {name:'Speed endurance (15 min)',items:[
+  {ex:'60-yard build-ups',vol:'6×60 yd',note:'Start 70%, build to 90% by 40 yards. Controlled acceleration into top speed.',vid:yt('build up sprint speed endurance workout')},
+  {ex:'Band sprint (partner resist)',vol:'6×20 yd',note:'Partner holds band around waist. Drive 10 yards against resistance, release and accelerate. Trains hip extension power directly.',vid:yt('resistance band sprint partner assisted')},
+  {ex:'Flying 20s',vol:'4×20 yd',note:'30-yard rolling start into 20-yard max effort. Measures true top-end speed.',vid:yt('flying 20 sprint drill speed training')}
+ ]},
+ {name:'Cooldown (8 min)',items:[
+  {ex:'Easy jog',vol:'3 min',note:'Conversational pace. Flush lactate.',vid:null},
+  {ex:'Static stretch circuit',vol:'5 min',note:'Quad, hamstring, hip flexor, calf, piriformis — 30 sec each side.',vid:yt('static stretch routine athletes post workout')}
+ ]}
+]},
+'sa-b':{title:'Speed & agility — day B',focus:'Change of direction · agility · conditioning',equip:'Resistance bands, cones, dumbbells. Open grass field.',blocks:[
+ {name:'Dynamic warmup (10 min)',items:[
+  {ex:'High knees + butt kicks',vol:'2×20 yd each',note:'Exaggerated mechanics. Activates hip flexors and hamstrings.',vid:yt('high knees butt kicks warmup drill')},
+  {ex:'Lateral band walk',vol:'2×15 yd each',note:'Activates glute med before lateral agility work.',vid:yt('lateral band walk exercise form')},
+  {ex:'Inchworm + hip flexor stretch',vol:'5 reps',note:'Walk hands to pushup, stretch hip flexor, walk back.',vid:yt('inchworm hip flexor stretch warmup')},
+  {ex:'Shuffle + sprint transitions',vol:'4×10 yd each',note:'3 shuffles, plant, sprint 10 yards.',vid:yt('shuffle to sprint transition agility drill')}
+ ]},
+ {name:'Agility block (20 min)',items:[
+  {ex:'5-10-5 pro agility shuttle',vol:'8 reps',note:'5 right, 10 left, 5 right. Full recovery. Time each rep.',vid:yt('5 10 5 pro agility shuttle tutorial')},
+  {ex:'T-drill',vol:'6 reps',note:'Sprint 10, shuffle left 5, shuffle right 10, shuffle left 5, backpedal return. Track times.',vid:yt('T drill agility lacrosse tutorial')},
+  {ex:'4-corner cone box drill',vol:'3×4 reps each dir.',note:'Sprint, shuffle, backpedal, crossover. 5 yards between cones. Vary entry direction.',vid:yt('4 corner cone agility drill athletes')},
+  {ex:'Reactive agility (partner)',vol:'3×8 reactions',note:'Partner points direction — athlete reacts and sprints to that cone.',vid:yt('reactive agility drill partner athletes')}
+ ]},
+ {name:'Lacrosse-specific (15 min)',items:[
+  {ex:'Dodge patterns (bull, split, face)',vol:'3×5 each',note:'Game speed. Bull: drive shoulder through. Split: plant and explode opposite. Face: fake low, go high.',vid:yt('lacrosse dodge drills bull split face dodge')},
+  {ex:'Defensive slide series',vol:'3×20 yd each',note:'Lateral slide, crossover step, retreat step. Stay low. Game defensive footwork.',vid:yt('lacrosse defensive slide footwork drill')},
+  {ex:'Band throwing motion (anchored)',vol:'3×15 each',note:'Anchor band to tree or post. Full throw pattern. Grooves kinetic chain outdoors.',vid:yt('resistance band throwing motion lacrosse baseball')}
+ ]},
+ {name:'Conditioning + cooldown (15 min)',items:[
+  {ex:'Aerobic base intervals',vol:'4×3 min / 90s walk',note:'Strong but sustainable pace. Builds game endurance base.',vid:yt('aerobic interval training athletes')},
+  {ex:'Static stretch circuit',vol:'5 min',note:'Full lower body + shoulder. 30 sec each position.',vid:yt('static stretch routine athletes post workout')}
+ ]}
+]}
+},
+2:{
+'sa-a':{title:'Speed & agility — day A (phase 2)',focus:'Speed endurance · longer distances · reactive speed',equip:'Resistance bands, cones, open grass. All Phase 1 foundation assumed.',blocks:[
+ {name:'Dynamic warmup (12 min)',items:[
+  {ex:'Full Phase 1 warmup + power skips',vol:'12 min',note:'Same protocol, increase intensity. Add power skips — max height per skip.',vid:yt('power skip drill plyometric warmup')}
+ ]},
+ {name:'Acceleration block (12 min)',items:[
+  {ex:'Band sprint (partner resist, heavy band)',vol:'8×20 yd',note:'Heavier band resistance. Drive hard against resistance full 20 yards.',vid:yt('resistance band sprint partner assisted')},
+  {ex:'3-point stance sprints',vol:'6×30 yd',note:'Extended from 20 to 30 yards. Maintains drive phase longer.',vid:yt('3 point stance sprint start drill')},
+  {ex:'40-yard sprints (90%)',vol:'8×40 yd',note:'Increase volume from Phase 1. Walk back. Full recovery every rep.',vid:yt('40 yard dash acceleration mechanics')}
+ ]},
+ {name:'Speed endurance (18 min)',items:[
+  {ex:'100-yard sprint intervals',vol:'6×100 yd',note:'85–90% effort. Full recovery. Builds speed endurance for field transitions.',vid:yt('100 yard sprint interval training athletes')},
+  {ex:'Flying 30s',vol:'4×30 yd',note:'40-yard rolling start, 30-yard max effort. Top-speed development.',vid:yt('flying 30 sprint drill speed training')},
+  {ex:'Band-resisted 40s (contrast)',vol:'4×40 yd',note:'Partner resists first 20 yards, releases — accelerate through rest. Resistance-to-free contrast.',vid:yt('contrast sprint band resisted acceleration')}
+ ]},
+ {name:'Cooldown (8 min)',items:[
+  {ex:'Easy jog + static stretch',vol:'8 min',note:'Prioritize hip flexor and quad stretches after higher sprint volume.',vid:yt('static stretch routine athletes post workout')}
+ ]}
+]},
+'sa-b':{title:'Speed & agility — day B (phase 2)',focus:'Reactive agility · higher conditioning · sport integration',equip:'Resistance bands, cones, dumbbells. Open grass field.',blocks:[
+ {name:'Dynamic warmup (10 min)',items:[
+  {ex:'Full Phase 1 warmup sequence',vol:'10 min',note:'Same protocol. Increase shuffle and crossover pace.',vid:yt('dynamic warmup speed agility athletes')}
+ ]},
+ {name:'Agility block (22 min)',items:[
+  {ex:'5-10-5 pro agility shuttle',vol:'10 reps',note:'Increase from Phase 1. Track times. Compete against baseline.',vid:yt('5 10 5 pro agility shuttle tutorial')},
+  {ex:'T-drill',vol:'8 reps',note:'Increase from Phase 1. Push for faster times.',vid:yt('T drill agility lacrosse tutorial')},
+  {ex:'Reactive agility (multi-direction)',vol:'4×8 reactions',note:'Partner adds verbal + visual cues simultaneously. Mirrors live game decisions.',vid:yt('reactive agility multi direction drill athletes')},
+  {ex:'4-corner box drill (7-yard spacing)',vol:'4×4 reps',note:'Larger cone spacing. Higher speed. Vary patterns.',vid:yt('4 corner cone agility drill athletes')}
+ ]},
+ {name:'Lacrosse-specific (15 min)',items:[
+  {ex:'Dodge patterns (game speed)',vol:'4×5 each',note:'Increase reps. Focus on explosive first step out of each dodge.',vid:yt('lacrosse dodge drills bull split face dodge')},
+  {ex:'Defensive slide + sprint transition',vol:'4×20 yd',note:'10-yard slide, crossover, burst into sprint. Mirrors defensive breakdown.',vid:yt('lacrosse defensive slide to sprint transition')},
+  {ex:'Wall ball (band warmup first)',vol:'15 min',note:'Anchor band, throw warmup, then wall ball. Quick stick, opposite hand, far-side targets.',vid:yt('lacrosse wall ball advanced drills')}
+ ]},
+ {name:'Conditioning (15 min)',items:[
+  {ex:'4×800m runs (grass loops)',vol:'4 reps',note:'Strong pace, 2-min rest. Lactate threshold build.',vid:yt('800m interval running training athletes')},
+  {ex:'Static stretch circuit',vol:'5 min',note:'Full lower body + shoulder. 30 sec each.',vid:yt('static stretch routine athletes post workout')}
+ ]}
+]}
+},
+3:{
+'sa-a':{title:'Speed & agility — day A (phase 3)',focus:'Peak sprint speed · maximum power · sport simulation',equip:'Resistance bands, cones, open grass. Peak phase — full effort every rep.',blocks:[
+ {name:'Dynamic warmup + activation (14 min)',items:[
+  {ex:'Full warmup + power skips + lateral bounds',vol:'14 min',note:'Extended. Add lateral bounds and triple bounds. Full CNS activation required.',vid:yt('plyometric warmup bounds skips athletes')}
+ ]},
+ {name:'Peak acceleration (15 min)',items:[
+  {ex:'Band sprint (max resistance)',vol:'8×20 yd',note:'Heaviest resistance of the program. Maximum hip extension power output.',vid:yt('resistance band sprint partner assisted')},
+  {ex:'10-yard burst starts',vol:'10×10 yd',note:'Absolute first-step explosiveness. Max effort, full rest.',vid:yt('10 yard burst start sprint drill')},
+  {ex:'40-yard sprints (95%)',vol:'10×40 yd',note:'Peak sprint volume. 95% effort. Full recovery. Compete against Phase 1 and 2 times.',vid:yt('40 yard dash acceleration mechanics')}
+ ]},
+ {name:'Peak speed endurance (20 min)',items:[
+  {ex:'100-yard sprint intervals',vol:'10×100 yd',note:'Peak volume at 90–95% effort. Full recovery. Highest speed endurance demand of the program.',vid:yt('100 yard sprint interval training athletes')},
+  {ex:'Flying 40s',vol:'4×40 yd',note:'50-yard rolling start into 40-yard max effort. True peak top-end speed.',vid:yt('flying 40 sprint drill top speed training')},
+  {ex:'Contrast sprint (band resist + free)',vol:'4×40 yd',note:'Resist first 20, free for final 20. Post-activation potentiation.',vid:yt('contrast sprint band resisted acceleration')}
+ ]},
+ {name:'Cooldown (8 min)',items:[
+  {ex:'Easy jog + full static stretch',vol:'8 min',note:'Prioritize hip flexors and hamstrings after peak sprint volume.',vid:yt('static stretch routine athletes post workout')}
+ ]}
+]},
+'sa-b':{title:'Speed & agility — day B (phase 3)',focus:'Peak agility · lactate tolerance · full game simulation',equip:'Resistance bands, cones, dumbbells. Open grass. Simulates game-pace demands.',blocks:[
+ {name:'Dynamic warmup (12 min)',items:[
+  {ex:'Full warmup + power skips + reactive shuffle',vol:'12 min',note:'Extended Phase 3 warmup. Add partner reactive shuffles at end.',vid:yt('dynamic warmup speed agility athletes')}
+ ]},
+ {name:'Peak agility block (25 min)',items:[
+  {ex:'5-10-5 pro agility (max effort)',vol:'10 reps',note:'Track personal best times. Full recovery. Measure 12 weeks of change-of-direction adaptation.',vid:yt('5 10 5 pro agility shuttle tutorial')},
+  {ex:'T-drill (max effort)',vol:'8 reps',note:'Compete against Phase 1 and 2 times. Full rest.',vid:yt('T drill agility lacrosse tutorial')},
+  {ex:'Reactive agility (multi-cue, complex)',vol:'4×10 reactions',note:'Verbal + visual + delayed cues. Highest cognitive-athletic demand.',vid:yt('reactive agility multi direction drill athletes')},
+  {ex:'Lacrosse dodge circuit',vol:'4×5 each',note:'Bull, split, face at maximum game speed. Every dodge into a sprint.',vid:yt('lacrosse dodge drills bull split face dodge')}
+ ]},
+ {name:'Game pace simulation (20 min)',items:[
+  {ex:'Lacrosse sprint-dodge-shoot circuit',vol:'2×10 min continuous',note:'Continuous game-pace: sprint, dodge, shoot, defend. Partner drills preferred. Full effort.',vid:yt('lacrosse game speed conditioning drill')},
+  {ex:'Wall ball — max velocity',vol:'10 min',note:'Max velocity throws, quick stick, opposite hand. Measure how hard the ball hits vs week 1.',vid:yt('lacrosse wall ball power advanced drills')}
+ ]},
+ {name:'Conditioning + cooldown (15 min)',items:[
+  {ex:'6×400m runs (grass loop)',vol:'6 reps',note:'Hard — not all-out. 90-sec rest. Peak lactate tolerance. Mirrors game sprint density.',vid:yt('400m interval training lacrosse conditioning')},
+  {ex:'Full static stretch circuit',vol:'5 min',note:'Complete lower body + shoulder + hip flexor. Every session.',vid:yt('static stretch routine athletes post workout')}
+ ]}
+]}
+}
+};
+
+var DAYS=[
+  {id:'lift',label:'Lift day'},
+  {id:'sa-a',label:'Speed & agility A'},
+  {id:'sa-b',label:'Speed & agility B'}
+];
+
+var phase=1,dayId='lift',altOpen={};
+
+function setPhase(p){
+  phase=p;dayId='lift';altOpen={};
+  document.querySelectorAll('.pchip').forEach(function(c,i){c.classList.toggle('on',i===p-1);});
+  renderNav();renderDay();
+}
+function setDay(id){
+  dayId=id;altOpen={};
+  document.querySelectorAll('.dchip').forEach(function(c){c.classList.toggle('on',c.dataset.id===id);});
+  renderDay();
+  document.getElementById('scroll').scrollTop=0;
+}
+function renderNav(){
+  document.getElementById('daynav').innerHTML=DAYS.map(function(d){
+    return '<div class="dchip'+(d.id===dayId?' on':'')+'" data-id="'+d.id+'" onclick="setDay(\''+d.id+'\')">'+d.label+'</div>';
+  }).join('');
+}
+function toggleAlt(key){
+  altOpen[key]=!altOpen[key];
+  var el=document.getElementById('alt-'+key);
+  var btn=document.getElementById('altbtn-'+key);
+  if(el){el.classList.toggle('open',!!altOpen[key]);}
+  if(btn){btn.innerHTML=altOpen[key]?'&#9650;&nbsp;hide alternatives':'&#9660;&nbsp;show alternatives';}
+}
+function renderDay(){
+  var html='';
+  var sc=SCHEMES[phase];
+  html+='<div class="scheme-bar">'+sc.map(function(s){return '<span class="spill">'+s+'</span>';}).join('')+'</div>';
+  if(dayId==='lift'){
+    var blocks=LIFT[phase];
+    blocks.forEach(function(block){
+      html+='<div class="block-card">';
+      html+='<div class="block-hdr"><div class="seq-num">'+block.seq+'</div><div><div class="block-name">'+block.group+'</div><div class="block-rat">'+block.rat+'</div></div></div>';
+      block.pairs.forEach(function(pair,pi){
+        var p=pair.p;
+        var key=block.seq+'-'+pi;
+        var tags=(p.tags||[]).map(function(t){
+          if(t==='chain')return '<span class="tag tag-chain">throw chain</span>';
+          if(t==='prehab')return '<span class="tag tag-prehab">prehab</span>';
+          return '';
+        }).join('');
+        html+='<div class="ex-row">';
+        html+='<div class="ex-top"><div class="ex-name">'+p.n+'</div><div class="sr-badge">'+p.sr+'</div></div>';
+        if(tags)html+=tags;
+        html+='<div class="ex-note">'+p.note+'</div>';
+        html+='<div class="ex-actions">';
+        html+=vidBtn(p.vid);
+        if(pair.alts&&pair.alts.length){
+          html+='<div class="alt-toggle" id="altbtn-'+key+'" onclick="toggleAlt(\''+key+'\')">&#9660;&nbsp;show alternatives</div>';
+        }
+        html+='</div>';
+        if(pair.alts&&pair.alts.length){
+          html+='<div class="alt-panel" id="alt-'+key+'">';
+          pair.alts.forEach(function(alt,ai){
+            html+='<div class="alt-item">';
+            html+='<div class="alt-label">alternative '+(ai+1)+'</div>';
+            html+='<div class="alt-top"><div class="alt-name">'+alt.n+'</div>'+altVidBtn(alt.vid)+'</div>';
+            html+='<div class="alt-note">'+alt.note+'</div>';
+            html+='</div>';
+          });
+          html+='</div>';
+        }
+        html+='</div>';
+      });
+      html+='</div>';
+    });
+  } else {
+    var data=SA[phase][dayId];
+    html+='<div class="info-pill"><strong>'+data.title+'</strong><br>'+data.focus+'<br><span style="opacity:.8;font-size:10.5px">Equipment: '+data.equip+'</span></div>';
+    data.blocks.forEach(function(block){
+      html+='<div class="block-card">';
+      html+='<div class="block-hdr"><div class="block-name">'+block.name+'</div></div>';
+      block.items.forEach(function(item){
+        html+='<div class="sa-item"><div class="sa-ex">'+item.ex+'</div><div class="sa-vol">'+item.vol+'</div><div class="sa-note">'+item.note+'</div>';
+        if(item.vid)html+=altVidBtn(item.vid);
+        html+='</div>';
+      });
+      html+='</div>';
+    });
+  }
+  document.getElementById('scroll').innerHTML=html;
+}
+renderNav();renderDay();
+
+if('serviceWorker' in navigator){
+  var swCode='self.addEventListener("install",function(e){e.waitUntil(caches.open("lax-v1").then(function(c){return c.addAll([location.href]);}));});self.addEventListener("fetch",function(e){e.respondWith(caches.match(e.request).then(function(r){return r||fetch(e.request);}));});';
+  var blob=new Blob([swCode],{type:'text/javascript'});
+  navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(function(){});
+}
+</script>
+</body>
+</html>
